@@ -60,8 +60,8 @@ const Profile = ({ user, riderData, setRiderData }) => {
   // Calculate rider statistics
   const totalRides = riderData?.previousRides?.length || 0;
   const totalSpent = riderData?.previousRides?.reduce((sum, ride) => sum + (ride.totalFare || 0), 0) || 0;
-  const avgRating = riderData?.previousRides?.reduce((sum, ride) => sum + (ride.rating || 0), 0) / totalRides || 0;
-
+  const totalRatedRides = riderData?.previousRides?.reduce((sum,ride)=> sum + (ride.rating == null ? 0 : 1),0);
+  const avgRating = riderData?.previousRides?.reduce((sum, ride) => sum + (ride.rating || 0), 0) / totalRatedRides || 0;
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-6">

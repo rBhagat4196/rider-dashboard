@@ -233,7 +233,7 @@ const RiderDashboard = () => {
               <RateRides riderData={riderData} riderId={user.uid} />
             )}
             {view === "payment" && (
-              <Payment riderId={user.uid} activeRide={activeRide} />
+              <Payment riderId={user.uid} />
             )}
             {view === "analytics" && <Analytics riderData={riderData} />}
             {view === "profile" && (
