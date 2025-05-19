@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiCreditCard, FiDollarSign, FiSmartphone, FiCheck } from 'react-icons/fi';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, Timestamp, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/firebase';
 
 const Payment = ({ riderId }) => {
@@ -50,6 +50,13 @@ const Payment = ({ riderId }) => {
       const riderRef = doc(db, 'riders', riderId);
       await updateDoc(riderRef, {
         isPayment: false,
+        notifications:[
+          ...prev,
+          {
+            text : "Payment Completed",
+            timeStamp : Date.now()
+          }
+        ]
       });
 
       const updatedSnap = await getDoc(riderRef);

@@ -29,6 +29,7 @@ import RateRides from "../components/rider/RateRides";
 import Payment from "../components/rider/Payment";
 import Analytics from "../components/rider/Analytics";
 import Profile from "../components/rider/Profile";
+import Notification from "../components/utils/Notification";
 
 const RiderDashboard = () => {
   const [user, loading] = useAuthState(auth);
@@ -36,88 +37,8 @@ const RiderDashboard = () => {
   const [view, setView] = useState("home");
   const [riderData, setRiderData] = useState(null);
   const navigate = useNavigate();
-  const newPreviousRides = [
-    {
-      driverId: "y2m2GHYzLBhEeoOquA8CEjKMwWg1",
-
-      totalFare: 145.0,
-      mode: "auto",
-      totalDistance: 5.4,
-      startAddress: "Vaishali Metro Station",
-      destinationAddress: "Shipra Mall",
-      rating: null,
-    },
-    {
-      driverId: "y2m2GHYzLBhEeoOquA8CEjKMwWg1",
-
-      totalFare: 380.75,
-      mode: "cab",
-      totalDistance: 18.2,
-      startAddress: "Sector 63, Noida",
-      destinationAddress: "Akshardham Temple",
-      rating: null,
-    },
-    {
-      driverId: "y2m2GHYzLBhEeoOquA8CEjKMwWg1",
-
-      totalFare: 220.0,
-      mode: "auto",
-      totalDistance: 7.9,
-      startAddress: "Botanical Garden Metro",
-      destinationAddress: "Amity University",
-      rating: null,
-    },
-    {
-      driverId: "y2m2GHYzLBhEeoOquA8CEjKMwWg1",
-
-      totalFare: 89.0,
-      mode: "auto",
-      totalDistance: 3.1,
-      startAddress: "Noida City Centre",
-      destinationAddress: "Sector 18, Noida",
-      rating: null,
-    },
-    {
-      driverId: "y2m2GHYzLBhEeoOquA8CEjKMwWg1",
-
-      totalFare: 640.25,
-      mode: "cab",
-      totalDistance: 29.4,
-      startAddress: "Rajiv Chowk",
-      destinationAddress: "DLF Phase 3, Gurugram",
-      rating: null,
-    },
-    {
-      driverId: "y2m2GHYzLBhEeoOquA8CEjKMwWg1",
-      totalFare: 155.0,
-      mode: "auto",
-      totalDistance: 4.8,
-      startAddress: "Preet Vihar",
-      destinationAddress: "Laxmi Nagar Metro Station",
-      rating: null,
-    },
-    {
-      driverId: "y2m2GHYzLBhEeoOquA8CEjKMwWg1",
-
-      totalFare: 770.0,
-      mode: "cab",
-      totalDistance: 36.6,
-      startAddress: "New Delhi Railway Station",
-      destinationAddress: "Sector 137, Noida",
-      rating: null,
-    },
-    {
-      driverId: "y2m2GHYzLBhEeoOquA8CEjKMwWg1",
-
-      totalFare: 310.0,
-      mode: "cab",
-      totalDistance: 12.5,
-      startAddress: "Mayur Vihar Phase 1",
-      destinationAddress: "JLN Stadium",
-      rating: null,
-    },
-  ];
-
+  const [notification,setNotification] = useState(false)
+  
   useEffect(() => {
     if (!loading && !user) navigate("/login");
   }, [user, loading]);
@@ -151,10 +72,6 @@ const RiderDashboard = () => {
     const fetchRiderData = async () => {
       const docRef = doc(db, "riders", user.uid);
       const docSnap = await getDoc(docRef);
-
-      //   await updateDoc(docRef, {
-      //   previousRides: newPreviousRides
-      // });
       if (docSnap.exists()) {
         setRiderData(docSnap.data());
       }
@@ -199,6 +116,7 @@ const RiderDashboard = () => {
                 viewBox="0 0 24 24"
                 fill="currentColor"
                 className="w-5 h-5"
+                onClick={()=> setNotification(prev=> !prev)}
               >
                 <path
                   fillRule="evenodd"
@@ -218,6 +136,7 @@ const RiderDashboard = () => {
         </div>
       </header>
 
+      {notification && <Notification riderId={user.uid}/>}
       {/* Main content area */}
       <main className="flex-1 overflow-y-auto pb-20">
         <div className="max-w-md mx-auto px-4 py-4">
