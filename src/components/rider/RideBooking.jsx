@@ -1,7 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FiMapPin, FiNavigation, FiClock } from 'react-icons/fi';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, setDoc,doc,updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/firebase';
+import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix for default marker icons in Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 const RideBooking = ({ user, riderData }) => {
   const [pickupAddress, setPickupAddress] = useState('');
@@ -15,6 +26,10 @@ const RideBooking = ({ user, riderData }) => {
   const [dropSuggestions, setDropSuggestions] = useState([]);
   const [showPickupSuggestions, setShowPickupSuggestions] = useState(false);
   const [showDropSuggestions, setShowDropSuggestions] = useState(false);
+  const [pickupCoords, setPickupCoords] = useState(null);
+  const [dropCoords, setDropCoords] = useState(null);
+  const [routeGeometry, setRouteGeometry] = useState(null);
+  const mapRef = useRef(null);
 
   // Fetch address suggestions from Nominatim API
   const fetchAddressSuggestions = async (query, setSuggestions) => {
@@ -31,19 +46,103 @@ const RideBooking = ({ user, riderData }) => {
     }
   };
 
-  // Handle pickup address input changes
-  useEffect(() => {
-    if (pickupAddress) {
-      fetchAddressSuggestions(pickupAddress, setPickupSuggestions);
+  // Get coordinates for an address
+  const geocodeAddress = async (address) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`
+      );
+      const data = await response.json();
+      if (data.length > 0) {
+        return {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon)
+        };
+      }
+      return null;
+    } catch (err) {
+      console.error('Error geocoding address:', err);
+      return null;
     }
-  }, [pickupAddress]);
+  };
 
-  // Handle drop address input changes
-  useEffect(() => {
-    if (dropAddress) {
-      fetchAddressSuggestions(dropAddress, setDropSuggestions);
+  // Get route from OpenRouteService
+  const getRoute = async (start, end) => {
+    try {
+      const response = await fetch(
+        `https://api.openrouteservice.org/v2/directions/driving-car?api_key=5b3ce3597851110001cf6248ca803a2f94ee4d46b2bd1e2b97c33ec5&start=${start.lng},${start.lat}&end=${end.lng},${end.lat}`
+      );
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      console.error('Error fetching route:', err);
+      return null;
     }
-  }, [dropAddress]);
+  };
+
+  // Calculate distance, fare, and route
+  const calculateRoute = async () => {
+    if (!pickupAddress || !dropAddress) return;
+    
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      // Geocode both addresses
+      const startCoords = await geocodeAddress(pickupAddress);
+      const endCoords = await geocodeAddress(dropAddress);
+      
+      if (!startCoords || !endCoords) {
+        throw new Error('Could not find locations');
+      }
+      
+      setPickupCoords(startCoords);
+      setDropCoords(endCoords);
+      
+      // Get route from ORS
+      const routeData = await getRoute(startCoords, endCoords);
+      
+      if (!routeData || !routeData.features || routeData.features.length === 0) {
+        throw new Error('Could not calculate route');
+      }
+      
+      const route = routeData.features[0];
+      const calculatedDistance = route.properties.segments[0].distance / 1000; // Convert to km
+      const baseFare = mode === 'auto' ? 30 : 80;
+      const perKmFare = mode === 'auto' ? 10 : 15;
+      const calculatedFare = baseFare + (calculatedDistance * perKmFare);
+      console.log(mode,baseFare,perKmFare,calculatedFare)
+      setDistance(calculatedDistance.toFixed(1));
+      setFare(calculatedFare.toFixed(0));
+      setRouteGeometry(route.geometry.coordinates.map(coord => [coord[1], coord[0]]));
+      
+      // Center map on the route
+      if (mapRef.current) {
+        const bounds = L.latLngBounds(routeGeometry || [startCoords, endCoords]);
+        mapRef.current.fitBounds(bounds);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to calculate route');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle pickup address selection
+  const handlePickupSelect = async (suggestion) => {
+    setPickupAddress(suggestion.display_name);
+    setPickupSuggestions([]);
+    setShowPickupSuggestions(false);
+    await calculateRoute();
+  };
+
+  // Handle drop address selection
+  const handleDropSelect = async (suggestion) => {
+    setDropAddress(suggestion.display_name);
+    setDropSuggestions([]);
+    setShowDropSuggestions(false);
+    await calculateRoute();
+  };
 
   // Get current location
   const getCurrentLocation = () => {
@@ -58,6 +157,12 @@ const RideBooking = ({ user, riderData }) => {
             );
             const data = await response.json();
             setPickupAddress(data.display_name);
+            const riderRef = doc(db,"riders",user.uid);
+            await updateDoc(riderRef,{
+              currentAddress : data.display_name
+            })
+            setPickupCoords({ lat: latitude, lng: longitude });
+            await calculateRoute();
           } catch (err) {
             setError('Failed to get current location address');
           } finally {
@@ -74,27 +179,6 @@ const RideBooking = ({ user, riderData }) => {
     }
   };
 
-  // Calculate distance and fare (mock implementation)
-  const calculateDistanceAndFare = () => {
-    if (!pickupAddress || !dropAddress) return;
-    
-    setIsLoading(true);
-    setError('');
-    
-    // In a real app, you would calculate actual distance
-    // This is a mock implementation
-    setTimeout(() => {
-      const mockDistance = Math.floor(Math.random() * 30) + 1; // 1-30 km
-      const baseFare = mode === 'auto' ? 30 : 80;
-      const perKmFare = mode === 'auto' ? 10 : 15;
-      const calculatedFare = baseFare + (mockDistance * perKmFare);
-      
-      setDistance(mockDistance);
-      setFare(calculatedFare);
-      setIsLoading(false);
-    }, 1000);
-  };
-
   // Book the ride
   const bookRide = async () => {
     if (!pickupAddress || !dropAddress) {
@@ -107,15 +191,18 @@ const RideBooking = ({ user, riderData }) => {
       setError('');
 
       // Create ride request in Firestore
-      await addDoc(collection(db, 'requests'), {
+      console.log(user.uid)
+      await setDoc(doc(db, 'requests',user.uid), {
         pickupAddress,
         dropAddress,
+        pickupCoords,
+        dropCoords,
         driverId: null,
         riderId: user.uid,
         mode,
         status: 'pending',
-        distance: distance || 0,
-        fare: fare || 0,
+        distance: parseFloat(distance),
+        fare: parseFloat(fare),
         createdAt: new Date().toISOString()
       });
 
@@ -126,6 +213,9 @@ const RideBooking = ({ user, riderData }) => {
       setFare(null);
       setPickupSuggestions([]);
       setDropSuggestions([]);
+      setPickupCoords(null);
+      setDropCoords(null);
+      setRouteGeometry(null);
       
       alert('Ride booked successfully! Finding a driver...');
     } catch (err) {
@@ -146,7 +236,7 @@ const RideBooking = ({ user, riderData }) => {
           className={`flex-1 py-2 text-center font-medium ${mode === 'auto' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'}`}
           onClick={() => {
             setMode('auto');
-            calculateDistanceAndFare();
+            calculateRoute();
           }}
         >
           Auto
@@ -155,7 +245,7 @@ const RideBooking = ({ user, riderData }) => {
           className={`flex-1 py-2 text-center font-medium ${mode === 'cab' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'}`}
           onClick={() => {
             setMode('cab');
-            calculateDistanceAndFare();
+            calculateRoute();
           }}
         >
           Cab
@@ -171,6 +261,7 @@ const RideBooking = ({ user, riderData }) => {
             onChange={(e) => {
               setPickupAddress(e.target.value);
               setShowPickupSuggestions(true);
+              fetchAddressSuggestions(e.target.value, setPickupSuggestions);
             }}
             onFocus={() => setShowPickupSuggestions(true)}
             onBlur={() => setTimeout(() => setShowPickupSuggestions(false), 200)}
@@ -188,17 +279,12 @@ const RideBooking = ({ user, riderData }) => {
           </button>
         </div>
         {showPickupSuggestions && pickupSuggestions.length > 0 && (
-          <div className="mt-1 border border-gray-200 rounded-md shadow-lg absolute z-10 w-full bg-white max-h-60 overflow-y-auto">
+          <div className="mt-1 border border-gray-200 rounded-md shadow-lg absolute w-full bg-white max-h-60 overflow-y-auto z-99">
             {pickupSuggestions.map((suggestion, index) => (
               <div
                 key={index}
                 className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
-                onClick={() => {
-                  setPickupAddress(suggestion.display_name);
-                  setPickupSuggestions([]);
-                  setShowPickupSuggestions(false);
-                  calculateDistanceAndFare();
-                }}
+                onClick={() => handlePickupSelect(suggestion)}
               >
                 {suggestion.display_name}
               </div>
@@ -216,6 +302,7 @@ const RideBooking = ({ user, riderData }) => {
             onChange={(e) => {
               setDropAddress(e.target.value);
               setShowDropSuggestions(true);
+              fetchAddressSuggestions(e.target.value, setDropSuggestions);
             }}
             onFocus={() => setShowDropSuggestions(true)}
             onBlur={() => setTimeout(() => setShowDropSuggestions(false), 200)}
@@ -225,17 +312,12 @@ const RideBooking = ({ user, riderData }) => {
           <FiMapPin className="absolute left-3 top-3 text-gray-400" />
         </div>
         {showDropSuggestions && dropSuggestions.length > 0 && (
-          <div className="mt-1 border border-gray-200 rounded-md shadow-lg absolute z-10 w-full bg-white max-h-60 overflow-y-auto">
+          <div className="mt-1 border border-gray-200 rounded-md shadow-lg absolute z-[999999] w-full bg-white max-h-60 overflow-y-auto">
             {dropSuggestions.map((suggestion, index) => (
               <div
                 key={index}
                 className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
-                onClick={() => {
-                  setDropAddress(suggestion.display_name);
-                  setDropSuggestions([]);
-                  setShowDropSuggestions(false);
-                  calculateDistanceAndFare();
-                }}
+                onMouseEnter={() => handleDropSelect(suggestion)}
               >
                 {suggestion.display_name}
               </div>
@@ -243,6 +325,40 @@ const RideBooking = ({ user, riderData }) => {
           </div>
         )}
       </div>
+
+      {/* Map Display */}
+      {(pickupCoords || dropCoords) && (
+        <div className="mb-4 h-64 rounded-md overflow-hidden ">
+          <MapContainer
+            center={pickupCoords || [20.5937, 78.9629]} // Default to India center
+            zoom={13}
+            style={{ height: '100%', width: '100%' }}
+            ref={mapRef}
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            />
+            {pickupCoords && (
+              <Marker position={pickupCoords}>
+                <Popup>Pickup Location</Popup>
+              </Marker>
+            )}
+            {dropCoords && (
+              <Marker position={dropCoords}>
+                <Popup>Drop Location</Popup>
+              </Marker>
+            )}
+            {routeGeometry && (
+              <Polyline 
+                positions={routeGeometry}
+                color="blue"
+                weight={4}
+              />
+            )}
+          </MapContainer>
+        </div>
+      )}
 
       {/* Fare Calculation */}
       {(distance || fare) && (
