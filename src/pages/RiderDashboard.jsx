@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, db} from "../firebase/firebase";
+import { auth, db } from "../firebase/firebase";
 import { useNavigate } from "react-router-dom";
 import {
   collection,
@@ -9,7 +9,7 @@ import {
   onSnapshot,
   doc,
   getDoc,
-  updateDoc
+  updateDoc,
 } from "firebase/firestore";
 import {
   FiHome,
@@ -37,71 +37,86 @@ const RiderDashboard = () => {
   const [riderData, setRiderData] = useState(null);
   const navigate = useNavigate();
   const newPreviousRides = [
-  {
-    totalFare: 145.00,
-    mode: "auto",
-    totalDistance: 5.4,
-    startAddress: "Vaishali Metro Station",
-    destinationAddress: "Shipra Mall",
-    rating: null
-  },
-  {
-    totalFare: 380.75,
-    mode: "cab",
-    totalDistance: 18.2,
-    startAddress: "Sector 63, Noida",
-    destinationAddress: "Akshardham Temple",
-    rating: null
-  },
-  {
-    totalFare: 220.00,
-    mode: "auto",
-    totalDistance: 7.9,
-    startAddress: "Botanical Garden Metro",
-    destinationAddress: "Amity University",
-    rating: null
-  },
-  {
-    totalFare: 89.00,
-    mode: "auto",
-    totalDistance: 3.1,
-    startAddress: "Noida City Centre",
-    destinationAddress: "Sector 18, Noida",
-    rating: null
-  },
-  {
-    totalFare: 640.25,
-    mode: "cab",
-    totalDistance: 29.4,
-    startAddress: "Rajiv Chowk",
-    destinationAddress: "DLF Phase 3, Gurugram",
-    rating: null
-  },
-  {
-    totalFare: 155.00,
-    mode: "auto",
-    totalDistance: 4.8,
-    startAddress: "Preet Vihar",
-    destinationAddress: "Laxmi Nagar Metro Station",
-    rating: null
-  },
-  {
-    totalFare: 770.00,
-    mode: "cab",
-    totalDistance: 36.6,
-    startAddress: "New Delhi Railway Station",
-    destinationAddress: "Sector 137, Noida",
-    rating: null
-  },
-  {
-    totalFare: 310.00,
-    mode: "cab",
-    totalDistance: 12.5,
-    startAddress: "Mayur Vihar Phase 1",
-    destinationAddress: "JLN Stadium",
-    rating: null
-  }
-];
+    {
+      driverId: "y2m2GHYzLBhEeoOquA8CEjKMwWg1",
+
+      totalFare: 145.0,
+      mode: "auto",
+      totalDistance: 5.4,
+      startAddress: "Vaishali Metro Station",
+      destinationAddress: "Shipra Mall",
+      rating: null,
+    },
+    {
+      driverId: "y2m2GHYzLBhEeoOquA8CEjKMwWg1",
+
+      totalFare: 380.75,
+      mode: "cab",
+      totalDistance: 18.2,
+      startAddress: "Sector 63, Noida",
+      destinationAddress: "Akshardham Temple",
+      rating: null,
+    },
+    {
+      driverId: "y2m2GHYzLBhEeoOquA8CEjKMwWg1",
+
+      totalFare: 220.0,
+      mode: "auto",
+      totalDistance: 7.9,
+      startAddress: "Botanical Garden Metro",
+      destinationAddress: "Amity University",
+      rating: null,
+    },
+    {
+      driverId: "y2m2GHYzLBhEeoOquA8CEjKMwWg1",
+
+      totalFare: 89.0,
+      mode: "auto",
+      totalDistance: 3.1,
+      startAddress: "Noida City Centre",
+      destinationAddress: "Sector 18, Noida",
+      rating: null,
+    },
+    {
+      driverId: "y2m2GHYzLBhEeoOquA8CEjKMwWg1",
+
+      totalFare: 640.25,
+      mode: "cab",
+      totalDistance: 29.4,
+      startAddress: "Rajiv Chowk",
+      destinationAddress: "DLF Phase 3, Gurugram",
+      rating: null,
+    },
+    {
+      driverId: "y2m2GHYzLBhEeoOquA8CEjKMwWg1",
+      totalFare: 155.0,
+      mode: "auto",
+      totalDistance: 4.8,
+      startAddress: "Preet Vihar",
+      destinationAddress: "Laxmi Nagar Metro Station",
+      rating: null,
+    },
+    {
+      driverId: "y2m2GHYzLBhEeoOquA8CEjKMwWg1",
+
+      totalFare: 770.0,
+      mode: "cab",
+      totalDistance: 36.6,
+      startAddress: "New Delhi Railway Station",
+      destinationAddress: "Sector 137, Noida",
+      rating: null,
+    },
+    {
+      driverId: "y2m2GHYzLBhEeoOquA8CEjKMwWg1",
+
+      totalFare: 310.0,
+      mode: "cab",
+      totalDistance: 12.5,
+      startAddress: "Mayur Vihar Phase 1",
+      destinationAddress: "JLN Stadium",
+      rating: null,
+    },
+  ];
 
   useEffect(() => {
     if (!loading && !user) navigate("/login");
@@ -137,9 +152,9 @@ const RiderDashboard = () => {
       const docRef = doc(db, "riders", user.uid);
       const docSnap = await getDoc(docRef);
 
-      await updateDoc(docRef, {
-      previousRides: newPreviousRides
-    });
+      //   await updateDoc(docRef, {
+      //   previousRides: newPreviousRides
+      // });
       if (docSnap.exists()) {
         setRiderData(docSnap.data());
       }
@@ -214,7 +229,9 @@ const RiderDashboard = () => {
               <CurrentRide ride={activeRide} user={user} />
             )}
             {view === "history" && <RideHistory riderData={riderData} />}
-            {view === "rate" && <RateRides riderData = {riderData} riderId={user.uid} />}
+            {view === "rate" && (
+              <RateRides riderData={riderData} riderId={user.uid} />
+            )}
             {view === "payment" && (
               <Payment riderId={user.uid} activeRide={activeRide} />
             )}
