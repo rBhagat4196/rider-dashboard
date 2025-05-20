@@ -157,6 +157,7 @@ const RideBooking = ({ user, riderData,setView }) => {
               `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
             );
             const data = await response.json();
+            console.log(data)
             setPickupAddress(data.display_name);
             const riderRef = doc(db,"riders",user.uid);
             await updateDoc(riderRef,{

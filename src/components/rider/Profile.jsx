@@ -101,7 +101,7 @@ const Profile = ({ user, riderData, setRiderData }) => {
     formData.append("file", file);
     formData.append("upload_preset", unsignedPreset);
 
-    setLoading(true);
+    setUploading(true);
     try {
       const res = await fetch(
         `https://api.cloudinary.com/v1_1/${cloudName}/upload`,
@@ -117,7 +117,7 @@ const Profile = ({ user, riderData, setRiderData }) => {
     } catch (err) {
       console.error("Upload failed", err);
     } finally {
-      setLoading(false);
+      setUploading(false);
     }
   };
   return (

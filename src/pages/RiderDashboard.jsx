@@ -38,7 +38,7 @@ const RiderDashboard = () => {
   const [riderData, setRiderData] = useState(null);
   const navigate = useNavigate();
   const [notification,setNotification] = useState(false)
-  
+  const [anyNotification,setAnyNotification] = useState(false)
   useEffect(() => {
     if (!loading && !user) navigate("/login");
   }, [user, loading]);
@@ -74,6 +74,18 @@ const RiderDashboard = () => {
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         setRiderData(docSnap.data());
+      }
+      const data = docSnap.data();
+      if (data && data.notifications) {
+        // Filter unread notifications and sort by timestamp descending
+        const sorted = [...data.notifications]
+          .filter((a) => a.mark === "unread")
+          .sort((a, b) => {
+            const timeA = a.timeStamp?.seconds || 0;  // Firestore Timestamp seconds
+            const timeB = b.timeStamp?.seconds || 0;
+            return timeB - timeA;
+          });
+        setAnyNotification(()=> sorted.length == 0 ? false : true);
       }
     };
 
@@ -124,7 +136,11 @@ const RiderDashboard = () => {
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+              {
+                anyNotification && (
+                  <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+                )
+              }
             </button>
 
             <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
@@ -136,7 +152,7 @@ const RiderDashboard = () => {
         </div>
       </header>
 
-      {notification && <Notification riderId={user.uid}/>}
+      {notification && <Notification riderId={user.uid} setAnyNotification={setAnyNotification}/>}
       {/* Main content area */}
       <main className="flex-1 overflow-y-auto pb-20">
         <div className="max-w-md mx-auto px-4 py-4">

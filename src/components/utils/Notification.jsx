@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/firebase'; // adjust path if needed
 
-const Notification = ({ riderId }) => {
+const Notification = ({ riderId ,setAnyNotification}) => {
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
@@ -42,6 +42,7 @@ const Notification = ({ riderId }) => {
       }));
         await updateDoc(riderRef, { notifications: allNotifications });
         setNotifications([]);
+        setAnyNotification(false)
       }
     catch (error) {
       console.error("Failed to mark notifications as read:", error);
