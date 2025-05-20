@@ -187,6 +187,7 @@ const CurrentRide = ({ ride, user, setView }) => {
                 <div className="bg-gray-50 p-3 rounded-lg">
                   <div className="flex items-center">
                     <div className="bg-indigo-100 p-2 rounded-full mr-3">
+                      driver?.profileURL ? ( <img src={driver?.profileURL} className="w-full h-full object-cover"/> ) ? 
                       <FiUser className="text-indigo-600" />
                     </div>
                     <div>
