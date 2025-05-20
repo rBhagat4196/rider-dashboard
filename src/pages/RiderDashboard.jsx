@@ -142,10 +142,10 @@ const RiderDashboard = () => {
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-4">
             {view === "home" && (
-              <RideBooking user={user} riderData={riderData} />
+              <RideBooking user={user} riderData={riderData} setView = {setView} />
             )}
             {view === "current" && activeRide && (
-              <CurrentRide ride={activeRide} user={user} />
+              <CurrentRide ride={activeRide} user={user} setView={setView}/>
             )}
             {view === "history" && <RideHistory riderData={riderData} />}
             {view === "rate" && (

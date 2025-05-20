@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FiMapPin, FiNavigation, FiClock } from 'react-icons/fi';
+import { FiMapPin, FiNavigation, FiClock,FiCheckCircle } from 'react-icons/fi';
 import { collection, addDoc, setDoc,doc,updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/firebase';
 import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
@@ -14,7 +14,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const RideBooking = ({ user, riderData }) => {
+const RideBooking = ({ user, riderData,setView }) => {
   const [pickupAddress, setPickupAddress] = useState('');
   const [dropAddress, setDropAddress] = useState('');
   const [mode, setMode] = useState('auto');
@@ -30,7 +30,8 @@ const RideBooking = ({ user, riderData }) => {
   const [dropCoords, setDropCoords] = useState(null);
   const [routeGeometry, setRouteGeometry] = useState(null);
   const mapRef = useRef(null);
-
+  const [bookingStatus, setBookingStatus] = useState(null); // 'searching', 'accepted', 'error'
+  const [driverInfo, setDriverInfo] = useState(null);
   // Fetch address suggestions from Nominatim API
   const fetchAddressSuggestions = async (query, setSuggestions) => {
     if (query.length < 3) return;
@@ -111,7 +112,7 @@ const RideBooking = ({ user, riderData }) => {
       const baseFare = mode === 'auto' ? 30 : 80;
       const perKmFare = mode === 'auto' ? 10 : 15;
       const calculatedFare = baseFare + (calculatedDistance * perKmFare);
-      console.log(mode,baseFare,perKmFare,calculatedFare)
+      // console.log(mode,baseFare,perKmFare,calculatedFare)
       setDistance(calculatedDistance.toFixed(1));
       setFare(calculatedFare.toFixed(0));
       setRouteGeometry(route.geometry.coordinates.map(coord => [coord[1], coord[0]]));
@@ -191,7 +192,7 @@ const RideBooking = ({ user, riderData }) => {
       setError('');
 
       // Create ride request in Firestore
-      console.log(user.uid)
+      // console.log(user.uid)
       await setDoc(doc(db, 'requests',user.uid), {
         pickupAddress,
         dropAddress,
@@ -218,6 +219,7 @@ const RideBooking = ({ user, riderData }) => {
       setRouteGeometry(null);
       
       alert('Ride booked successfully! Finding a driver...');
+      setView("current")
     } catch (err) {
       setError('Failed to book ride. Please try again.');
       console.error('Error booking ride:', err);

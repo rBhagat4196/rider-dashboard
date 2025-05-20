@@ -12,17 +12,20 @@ import {
   FiMapPin,
 } from "react-icons/fi";
 
-const CurrentRide = ({ ride, user }) => {
+const CurrentRide = ({ ride, user ,setView}) => {
+  console.log(ride)
   const [currentRide, setCurrentRide] = useState(ride);
   const [driver, setDriver] = useState(null);
   const [activeTab, setActiveTab] = useState("track");
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancelSuccess, setCancelSuccess] = useState(false);
 
-  console.log(currentRide.pickupCoords, currentRide.dropCoords);
+  // console.log(currentRide.pickupCoords, currentRide.dropCoords);
   // Real-time updates for ride and driver
   useEffect(() => {
-    if (!ride.id) return;
+    if (!ride.id) {
+      setView('home')
+    };
 
     const unsubscribe = onSnapshot(doc(db, "requests", ride.id), (doc) => {
       if (doc.exists()) {
@@ -61,6 +64,7 @@ const CurrentRide = ({ ride, user }) => {
       });
       setCancelSuccess(true);
       setTimeout(() => setCancelSuccess(false), 3000);
+      setView('home')
     } catch (error) {
       console.error("Error cancelling ride:", error);
     } finally {
