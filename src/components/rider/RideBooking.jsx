@@ -218,7 +218,7 @@ const RideBooking = ({ user, riderData,setView }) => {
       setDropCoords(null);
       setRouteGeometry(null);
       
-      alert('Ride booked successfully! Finding a driver...');
+      // alert('Ride booked successfully! Finding a driver...');
       setView("current")
     } catch (err) {
       setError('Failed to book ride. Please try again.');
