@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { db, auth } from '../../firebase/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
-import { updateProfile } from 'firebase/auth';
+import { updateProfile, signOut } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = ({ user, riderData, setRiderData }) => {
   const [editMode, setEditMode] = useState(false);
@@ -12,6 +13,17 @@ const Profile = ({ user, riderData, setRiderData }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      navigate('/login'); // Redirect to login page after sign out
+    } catch (err) {
+      setError(err.message);
+      console.error("Error signing out:", err);
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -62,16 +74,25 @@ const Profile = ({ user, riderData, setRiderData }) => {
   const totalSpent = riderData?.previousRides?.reduce((sum, ride) => sum + (ride.totalFare || 0), 0) || 0;
   const totalRatedRides = riderData?.previousRides?.reduce((sum,ride)=> sum + (ride.rating == null ? 0 : 1),0);
   const avgRating = riderData?.previousRides?.reduce((sum, ride) => sum + (ride.rating || 0), 0) / totalRatedRides || 0;
+  
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-800">My Profile</h2>
-        <button 
-          onClick={() => setEditMode(!editMode)}
-          className={`px-3 py-1 rounded-md ${editMode ? 'bg-gray-200 text-gray-800' : 'bg-indigo-100 text-indigo-600'}`}
-        >
-          {editMode ? 'Cancel' : 'Edit'}
-        </button>
+        <div className="flex space-x-2">
+          <button 
+            onClick={() => setEditMode(!editMode)}
+            className={`px-3 py-1 rounded-md ${editMode ? 'bg-gray-200 text-gray-800' : 'bg-indigo-100 text-indigo-600'}`}
+          >
+            {editMode ? 'Cancel' : 'Edit'}
+          </button>
+          <button 
+            onClick={handleSignOut}
+            className="px-3 py-1 rounded-md bg-red-100 text-red-600 hover:bg-red-200"
+          >
+            Sign Out
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -176,15 +197,6 @@ const Profile = ({ user, riderData, setRiderData }) => {
               </p>
             </div>
           </div>
-
-          {/* {riderData?.currentRide?.driverId && (
-            <div className="mt-6 p-3 bg-indigo-50 rounded-lg">
-              <h3 className="font-medium text-indigo-800 mb-2">Current Ride</h3>
-              <p>From: {riderData.currentRide.pickupAddress}</p>
-              <p>To: {riderData.currentRide.dropAddress}</p>
-              <p>Fare: ${riderData.currentRide.fare?.toFixed(2)}</p>
-            </div>
-          )} */}
         </div>
       )}
     </div>
