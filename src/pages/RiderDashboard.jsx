@@ -147,7 +147,7 @@ const RiderDashboard = () => {
             {view === "current" && activeRide && (
               <CurrentRide ride={activeRide} user={user} setView={setView}/>
             )}
-            {view === "history" && <RideHistory riderData={riderData} />}
+            {view === "history" && <RideHistory riderId={user.uid} />}
             {view === "rate" && (
               <RateRides riderData={riderData} riderId={user.uid} />
             )}

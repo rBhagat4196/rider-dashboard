@@ -1,10 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { FiCreditCard, FiDollarSign, FiSmartphone, FiCheck } from 'react-icons/fi';
-import { doc, getDoc, Timestamp, updateDoc } from 'firebase/firestore';
-import { db } from '../../firebase/firebase';
+import React, { useState, useEffect } from "react";
+import {
+  FiCreditCard,
+  FiDollarSign,
+  FiSmartphone,
+  FiCheck,
+} from "react-icons/fi";
+import { doc, getDoc, Timestamp, updateDoc,arrayUnion } from "firebase/firestore";
+import { db } from "../../firebase/firebase";
 
 const Payment = ({ riderId }) => {
-  const [paymentMethod, setPaymentMethod] = useState('upi');
+  const [paymentMethod, setPaymentMethod] = useState("upi");
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [riderData, setRiderData] = useState(null);
@@ -13,7 +18,7 @@ const Payment = ({ riderId }) => {
   useEffect(() => {
     const fetchRiderData = async () => {
       try {
-        const riderRef = doc(db, 'riders', riderId);
+        const riderRef = doc(db, "riders", riderId);
         const snap = await getDoc(riderRef);
 
         if (snap.exists()) {
@@ -23,18 +28,18 @@ const Payment = ({ riderId }) => {
           // Simulate unpaid ride details — replace this with actual data from Firestore if structured differently
           if (data.isPayment) {
             setUnpaidRide({
-              startAddress: data.startAddress || 'Start Point',
-              destinationAddress: data.destinationAddress || 'End Point',
+              startAddress: data.startAddress || "Start Point",
+              destinationAddress: data.destinationAddress || "End Point",
               totalDistance: data.totalDistance || 5.5,
               totalFare: data.totalFare || 120.0,
-              mode: data.mode || 'cab',
+              mode: data.mode || "cab",
             });
           }
         } else {
-          console.warn('Rider not found');
+          console.warn("Rider not found");
         }
       } catch (err) {
-        console.error('Error fetching rider data:', err);
+        console.error("Error fetching rider data:", err);
       }
     };
 
@@ -45,18 +50,15 @@ const Payment = ({ riderId }) => {
     setIsProcessing(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      const riderRef = doc(db, 'riders', riderId);
+      const riderRef = doc(db, "riders", riderId);
       await updateDoc(riderRef, {
         isPayment: false,
-        notifications:[
-          ...prev,
-          {
-            text : "Payment Completed",
-            timeStamp : Date.now()
-          }
-        ]
+        notifications: arrayUnion({
+          text: "Payment Completed",
+          timeStamp: Date.now(),
+        }),
       });
 
       const updatedSnap = await getDoc(riderRef);
@@ -67,7 +69,7 @@ const Payment = ({ riderId }) => {
       setPaymentSuccess(true);
       setTimeout(() => setPaymentSuccess(false), 3000);
     } catch (error) {
-      console.error('Payment processing error:', error);
+      console.error("Payment processing error:", error);
     } finally {
       setIsProcessing(false);
     }
@@ -87,7 +89,9 @@ const Payment = ({ riderId }) => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Complete Payment</h1>
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">
+        Complete Payment
+      </h1>
 
       {/* Ride Summary */}
       <div className="bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-100">
@@ -99,7 +103,9 @@ const Payment = ({ riderId }) => {
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">To:</span>
-            <span className="font-medium">{unpaidRide?.destinationAddress}</span>
+            <span className="font-medium">
+              {unpaidRide?.destinationAddress}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Distance:</span>
@@ -111,7 +117,9 @@ const Payment = ({ riderId }) => {
           </div>
           <div className="flex justify-between text-lg font-bold mt-3 pt-3 border-t border-gray-100">
             <span>Amount Due:</span>
-            <span className="text-indigo-600">₹{unpaidRide?.totalFare.toFixed(2)}</span>
+            <span className="text-indigo-600">
+              ₹{unpaidRide?.totalFare.toFixed(2)}
+            </span>
           </div>
         </div>
       </div>
@@ -122,13 +130,17 @@ const Payment = ({ riderId }) => {
 
         <div className="space-y-3">
           <button
-            onClick={() => setPaymentMethod('upi')}
+            onClick={() => setPaymentMethod("upi")}
             className={`flex items-center w-full p-3 rounded-lg border ${
-              paymentMethod === 'upi' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:bg-gray-50'
+              paymentMethod === "upi"
+                ? "border-indigo-500 bg-indigo-50"
+                : "border-gray-200 hover:bg-gray-50"
             }`}
           >
             <FiSmartphone
-              className={`text-xl mr-3 ${paymentMethod === 'upi' ? 'text-indigo-600' : 'text-gray-500'}`}
+              className={`text-xl mr-3 ${
+                paymentMethod === "upi" ? "text-indigo-600" : "text-gray-500"
+              }`}
             />
             <div className="text-left">
               <p className="font-medium">UPI Payment</p>
@@ -137,13 +149,17 @@ const Payment = ({ riderId }) => {
           </button>
 
           <button
-            onClick={() => setPaymentMethod('cash')}
+            onClick={() => setPaymentMethod("cash")}
             className={`flex items-center w-full p-3 rounded-lg border ${
-              paymentMethod === 'cash' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:bg-gray-50'
+              paymentMethod === "cash"
+                ? "border-indigo-500 bg-indigo-50"
+                : "border-gray-200 hover:bg-gray-50"
             }`}
           >
             <FiDollarSign
-              className={`text-xl mr-3 ${paymentMethod === 'cash' ? 'text-indigo-600' : 'text-gray-500'}`}
+              className={`text-xl mr-3 ${
+                paymentMethod === "cash" ? "text-indigo-600" : "text-gray-500"
+              }`}
             />
             <div className="text-left">
               <p className="font-medium">Cash Payment</p>
@@ -158,7 +174,7 @@ const Payment = ({ riderId }) => {
         onClick={handlePayment}
         disabled={isProcessing}
         className={`w-full py-3 px-4 bg-indigo-600 text-white rounded-md font-medium flex items-center justify-center ${
-          isProcessing ? 'opacity-75' : 'hover:bg-indigo-700'
+          isProcessing ? "opacity-75" : "hover:bg-indigo-700"
         }`}
       >
         {isProcessing ? (
@@ -196,7 +212,7 @@ const Payment = ({ riderId }) => {
         </div>
       )}
 
-      {paymentMethod === 'cash' && (
+      {paymentMethod === "cash" && (
         <div className="mt-4 p-3 bg-blue-50 text-blue-700 rounded-md text-center text-sm">
           Please pay ₹{unpaidRide?.totalFare.toFixed(2)} directly to your driver
         </div>

@@ -12,24 +12,36 @@ import {
   FiMapPin,
 } from "react-icons/fi";
 
-const CurrentRide = ({ ride, user ,setView}) => {
-  console.log(ride)
+const CurrentRide = ({ ride, user, setView }) => {
   const [currentRide, setCurrentRide] = useState(ride);
   const [driver, setDriver] = useState(null);
   const [activeTab, setActiveTab] = useState("track");
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancelSuccess, setCancelSuccess] = useState(false);
 
-  // console.log(currentRide.pickupCoords, currentRide.dropCoords);
   // Real-time updates for ride and driver
   useEffect(() => {
-    if (!ride.id) {
-      setView('home')
-    };
+    if (!ride?.id) {
+      setView('home');
+      return;
+    }
 
     const unsubscribe = onSnapshot(doc(db, "requests", ride.id), (doc) => {
-      if (doc.exists()) {
-        setCurrentRide({ id: doc.id, ...doc.data() });
+      if (!doc.exists()) {
+        // Ride document no longer exists
+        setView('home');
+        return;
+      }
+
+      const rideData = { id: doc.id, ...doc.data() };
+      setCurrentRide(rideData);
+
+      // If ride is completed or cancelled, redirect after a delay
+      if (rideData.status === "completed" || rideData.status === "cancelled") {
+        const timer = setTimeout(() => {
+          setView('home');
+        }, 3000); // Redirect after 3 seconds
+        return () => clearTimeout(timer);
       }
     });
 
@@ -50,7 +62,7 @@ const CurrentRide = ({ ride, user ,setView}) => {
     }
 
     return () => unsubscribe();
-  }, [ride.id, ride.driverId]);
+  }, [ride?.id, ride?.driverId, setView]);
 
   const handleCancel = async () => {
     if (!window.confirm("Are you sure you want to cancel this ride?")) return;
@@ -63,8 +75,6 @@ const CurrentRide = ({ ride, user ,setView}) => {
         cancelledBy: user.uid,
       });
       setCancelSuccess(true);
-      setTimeout(() => setCancelSuccess(false), 3000);
-      setView('home')
     } catch (error) {
       console.error("Error cancelling ride:", error);
     } finally {
@@ -92,6 +102,14 @@ const CurrentRide = ({ ride, user ,setView}) => {
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
+
+  // If there's no ride or the ride is completed/cancelled, return null
+  // (the useEffect will handle the redirect)
+  if (!currentRide || !currentRide.id || 
+      currentRide.status === "completed" || 
+      currentRide.status === "cancelled") {
+    return null;
+  }
 
   return (
     <div className="p-4">

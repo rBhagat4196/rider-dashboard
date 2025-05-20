@@ -1,21 +1,52 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { db } from '../../firebase/firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { FiStar, FiCheck } from 'react-icons/fi';
 
-const RateRides = ({ riderData, riderId }) => {
-    // console.log(riderData)
+const RateRides = ({ riderId }) => {
+  const [riderData, setRiderData] = useState(null);
   const [currentRating, setCurrentRating] = useState(null);
   const [currentRideIndex, setCurrentRideIndex] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Filter rides that haven't been rated yet and have a driverId
-  const unratedRides = (riderData?.previousRides?.filter(ride => 
-    ride.rating === null && ride.driverId
+  // Fetch rider data initially
+  useEffect(() => {
+    const fetchRiderData = async () => {
+      try {
+        const riderRef = doc(db, 'riders', riderId);
+        const riderSnap = await getDoc(riderRef);
+        if (riderSnap.exists()) {
+          setRiderData(riderSnap.data());
+        } else {
+          console.error('Rider not found.');
+        }
+      } catch (error) {
+        console.error('Error fetching rider data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (riderId) fetchRiderData();
+  }, [riderId]);
+
+  if (loading) {
+    return (
+      <div className="p-4 text-center text-gray-500">Loading rider data...</div>
+    );
+  }
+
+  if (!riderData) {
+    return (
+      <div className="p-4 text-center text-red-500">Failed to load rider data.</div>
+    );
+  }
+
+  const unratedRides = (riderData.previousRides?.filter(ride =>
+    (ride.rating === null && ride.driverId) || ride.rating === undefined
   )) || [];
-
-//   console.log()
 
   const handleRatingChange = (rideIndex, rating) => {
     setCurrentRideIndex(rideIndex);
@@ -24,38 +55,34 @@ const RateRides = ({ riderData, riderId }) => {
 
   const submitRating = async () => {
     if (currentRating === null || currentRideIndex === null) return;
-    
+
     setIsSubmitting(true);
     setSubmitSuccess(false);
 
     try {
       const ride = riderData.previousRides[currentRideIndex];
       const riderRef = doc(db, 'riders', riderId);
-      
-      // Update rider's ride rating
+
+      // Update ride locally
       const updatedRides = [...riderData.previousRides];
       updatedRides[currentRideIndex] = {
         ...updatedRides[currentRideIndex],
         rating: currentRating
       };
 
-      await updateDoc(riderRef, {
-        previousRides: updatedRides
-      });
+      await updateDoc(riderRef, { previousRides: updatedRides });
 
-      // Update driver's rating if driverId exists
+      // Update driver's rating
       if (ride.driverId) {
         const driverRef = doc(db, 'drivers', ride.driverId);
         const driverSnap = await getDoc(driverRef);
-        
+
         if (driverSnap.exists()) {
           const driverData = driverSnap.data();
           const currentRatings = driverData.ratings || 0;
           const currentTotalRides = driverData.totalRides || 0;
 
-
-          // Calculate new average rating
-          const newRatings = ((currentRatings * currentTotalRides) + currentRating) / (currentTotalRides+1) ;
+          const newRatings = ((currentRatings * currentTotalRides) + currentRating) / (currentTotalRides + 1);
 
           await updateDoc(driverRef, {
             ratings: newRatings,
@@ -63,6 +90,12 @@ const RateRides = ({ riderData, riderId }) => {
           });
         }
       }
+
+      // Update local state
+      setRiderData(prev => ({
+        ...prev,
+        previousRides: updatedRides
+      }));
 
       setSubmitSuccess(true);
       setCurrentRating(null);
@@ -94,12 +127,12 @@ const RateRides = ({ riderData, riderId }) => {
 
       <div className="space-y-4">
         {unratedRides.map((ride, originalIndex) => {
-          // Find the original index in previousRides array
-          const rideIndex = riderData.previousRides.findIndex(r => 
-            r.startAddress === ride.startAddress && 
+          const rideIndex = riderData.previousRides.findIndex(r =>
+            r.startAddress === ride.startAddress &&
             r.destinationAddress === ride.destinationAddress &&
             r.totalFare === ride.totalFare &&
-            r.driverId === ride.driverId
+            r.driverId === ride.driverId &&
+            (r.rating === null || r.rating === undefined)
           );
 
           const isCurrentRide = rideIndex === currentRideIndex;
@@ -125,8 +158,8 @@ const RateRides = ({ riderData, riderId }) => {
                       key={star}
                       onClick={() => handleRatingChange(rideIndex, star)}
                       className={`text-2xl ${
-                        isCurrentRide && currentRating >= star 
-                          ? 'text-yellow-400' 
+                        isCurrentRide && currentRating >= star
+                          ? 'text-yellow-400'
                           : 'text-gray-300'
                       }`}
                     >
