@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/firebase'; // adjust path if needed
 
-const Notification = ({ riderId ,setAnyNotification}) => {
+const Notification = ({ riderId ,setAnyNotification,setNotification}) => {
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
@@ -42,7 +42,8 @@ const Notification = ({ riderId ,setAnyNotification}) => {
       }));
         await updateDoc(riderRef, { notifications: allNotifications });
         setNotifications([]);
-        setAnyNotification(false)
+        setAnyNotification(false);
+        setNotification(false)
       }
     catch (error) {
       console.error("Failed to mark notifications as read:", error);
@@ -50,7 +51,7 @@ const Notification = ({ riderId ,setAnyNotification}) => {
   };
 
   return (
-    <div className='z-50 w-[260px] max-h-[400px] overflow-y-auto bg-white shadow-lg rounded-lg p-4 absolute -right-2 top-16 border border-gray-200'>
+<div className='z-50 w-[260px] max-h-[400px] overflow-y-auto bg-white/40 backdrop-blur-md shadow-lg ring-1 ring-white/30 rounded-lg p-4 absolute left-2/4 top-16 border border-gray-200'>
       <h3 className="text-lg font-semibold mb-2 text-gray-700">Notifications</h3>
       {notifications.length === 0 ? (
         <p className="text-gray-500 text-sm">No notifications</p>

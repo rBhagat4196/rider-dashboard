@@ -161,7 +161,12 @@ const RiderDashboard = () => {
         </div>
       </header>
 
-      {notification && <Notification riderId={user.uid} setAnyNotification={setAnyNotification}/>}
+      {notification &&
+      <div className="fixed inset-0 z-40 backdrop-blur-sm bg-black/10">
+        <Notification riderId={user.uid} setAnyNotification={setAnyNotification} setNotification={setNotification} />
+        </div>
+        }
+        
       {/* Main content area */}
       <main className="flex-1 overflow-y-auto pb-20">
         <div className="max-w-md mx-auto px-4 py-4">
