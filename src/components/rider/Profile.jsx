@@ -281,7 +281,7 @@ const Profile = ({ user, riderData, setRiderData }) => {
             </div>
             <div className="text-center">
               <p className="text-sm text-gray-500">Total Spent</p>
-              <p className="text-xl font-bold">${totalSpent.toFixed(2)}</p>
+              <p className="text-xl font-bold">₹{totalSpent.toFixed(2)}</p>
             </div>
             <div className="text-center">
               <p className="text-sm text-gray-500">Avg. Rating</p>
