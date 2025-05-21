@@ -75,6 +75,7 @@ const CurrentRide = ({ ride, user, setView }) => {
         cancelledBy: user.uid,
       });
       setCancelSuccess(true);
+      setView('home')
     } catch (error) {
       console.error("Error cancelling ride:", error);
     } finally {
@@ -187,19 +188,24 @@ const CurrentRide = ({ ride, user, setView }) => {
                 <div className="bg-gray-50 p-3 rounded-lg">
                   <div className="flex items-center">
                     <div className="bg-indigo-100 p-2 rounded-full mr-3">
-                      driver?.profileURL ? ( <img src={driver?.profileURL} className="w-full h-full object-cover"/> ) ? 
-                      <FiUser className="text-indigo-600" />
+
+                      {driver?.profileURL ? ( 
+                        <div className="w-[60px] h-[60px] rounded-full overflow-hidden">
+  <img src={driver?.profileURL} alt="Driver" className="w-full h-full object-cover" />
+</div>
+
+                         ) :
+                      <FiUser className="text-indigo-600" />}
                     </div>
                     <div>
                       <h3 className="font-medium">{driver.name}</h3>
                       <p className="text-sm text-gray-600">
-                        {driver.vehicle?.model || "Vehicle"} •{" "}
-                        {driver.vehicle?.numberPlate || "DL-XXXX"}
+                        {driver.vehicle}
                       </p>
                       <div className="flex items-center mt-1">
                         <span className="text-yellow-500 mr-1">★</span>
                         <span className="text-sm">
-                          {driver.rating?.toFixed(1) || "4.5"}
+                          {driver.ratings?.toFixed(1) || "4.5"}
                         </span>
                       </div>
                     </div>

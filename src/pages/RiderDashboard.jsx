@@ -145,8 +145,17 @@ const RiderDashboard = () => {
 
             <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
               <span className="text-sm font-medium text-indigo-600">
-                {user?.displayName?.charAt(0) || "U"}
-              </span>
+ {riderData?.profileURL ? (
+                  <div className="h-[40px] w-[40px] rounded-full overflow-hidden border border-gray-300 shadow-sm">
+                    <img
+                      src={riderData?.profileURL}
+                      alt="Rider"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  riderData?.name?.charAt(0) || "U"
+                )}              </span>
             </div>
           </div>
         </div>
