@@ -5,7 +5,13 @@ import {
   FiSmartphone,
   FiCheck,
 } from "react-icons/fi";
-import { doc, getDoc, Timestamp, updateDoc,arrayUnion } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  Timestamp,
+  updateDoc,
+  arrayUnion,
+} from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 
 const Payment = ({ riderId }) => {
@@ -15,6 +21,7 @@ const Payment = ({ riderId }) => {
   const [riderData, setRiderData] = useState(null);
   const [unpaidRide, setUnpaidRide] = useState(null);
 
+  // console.log(unpaidRide)
   useEffect(() => {
     const fetchRiderData = async () => {
       try {
@@ -22,11 +29,14 @@ const Payment = ({ riderId }) => {
         const snap = await getDoc(riderRef);
 
         if (snap.exists()) {
-          const data = snap.data();
-          setRiderData(data);
+          const res = snap.data()?.previousRides || [];
+          setRiderData(snap.data());
+          const len = res.length;
+          const data = res[len - 1] || [];
+          console.log(data)
 
           // Simulate unpaid ride details — replace this with actual data from Firestore if structured differently
-          if (data.isPayment) {
+          if (snap.data()?.isPayment) {
             setUnpaidRide({
               startAddress: data.startAddress || "Start Point",
               destinationAddress: data.destinationAddress || "End Point",
