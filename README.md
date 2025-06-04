@@ -10,12 +10,15 @@ Currently, two official plugins are available:
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-![Screenshot (211)](https://github.com/user-attachments/assets/4faf0bf1-cf50-4054-96c8-c1f91505c5b3)
+![Screenshot (238)](https://github.com/user-attachments/assets/ddfbd102-ec05-4d00-8cfb-446a85209ace)
 
-![Screenshot (210)](https://github.com/user-attachments/assets/8e0b57ca-dbe6-4116-b88c-181c5b415058)
-![Screenshot (225)](https://github.com/user-attachments/assets/3d60d132-41a8-4a8e-b839-112120b693a0)
-![Screenshot (228)](https://github.com/user-attachments/assets/979bb391-25b9-4448-a929-326ce35abe0b)
-![Screenshot (221)](https://github.com/user-attachments/assets/6bd8de5e-d32c-4f93-9790-eb98637ef07d)
-![Screenshot (226)](https://github.com/user-attachments/assets/cecee31e-0bd2-49a2-93f1-887d631418f6)
-![Screenshot (227)](https://github.com/user-attachments/assets/837d63ce-a4fc-4ba0-9098-b033f8bee0af)
-![Screenshot (229)](https://github.com/user-attachments/assets/58b9fc07-02bb-4179-8ece-a187f123aa01)
+![Screenshot (237)](https://github.com/user-attachments/assets/ff487815-0ef4-4b2c-86f3-56ffada7bae2)
+![Screenshot (230)](https://github.com/user-attachments/assets/b68a34be-04ae-45c8-98a8-1056b4023519)
+![Screenshot (219)](https://github.com/user-attachments/assets/79d64212-1b6c-4fbd-a06e-3c4d786fb43c)
+![Screenshot (220)](https://github.com/user-attachments/assets/c3cde376-b610-4a26-9a43-c91f08f21da5)
+![Screenshot (233)](https://github.com/user-attachments/assets/095dddc4-167a-411b-9c63-da53eb3a26b5)
+![Screenshot (231)](https://github.com/user-attachments/assets/9ef56a00-c04a-44ed-8d14-0a055a07b43a)
+![Screenshot (232)](https://github.com/user-attachments/assets/fc9f4b91-de82-4b8a-8efe-2ba9885f14b2)
+![Screenshot (234)](https://github.com/user-attachments/assets/6609a283-0695-4e03-be66-8fdf50fc3131)
+![Screenshot (235)](https://github.com/user-attachments/assets/0a0d85ed-98c3-496b-9566-0104124b7d1f)
+![Screenshot (236)](https://github.com/user-attachments/assets/5d7dbb23-6028-48bc-9273-8922b2ed2339)
